@@ -1,5 +1,8 @@
 <html>
 <head>
+
+<meta charset="UTF-8">
+
 <style>
 .charac{
 color:black;
@@ -23,6 +26,11 @@ input[type=checkbox]:not(:checked) + label>div {background-color: grey}
 input[type=checkbox]:checked + label>div {background-color: green}
 
 </style>
+<script>
+get = function(e){return document.getElementById(e)};
+function getRandomInt(min, max) {  min = Math.ceil(min);  max = Math.floor(max); return Math.floor(Math.random() * (max - min)) + min; };
+</script>
+
 </head>
 <body>
 <div>
@@ -43,9 +51,6 @@ input[type=checkbox]:checked + label>div {background-color: green}
 </div>
 
 <script>
-get = function(e){return document.getElementById(e)};
-function getRandomInt(min, max) {  min = Math.ceil(min);  max = Math.floor(max); return Math.floor(Math.random() * (max - min)) + min; };
-
 ",./;:'\"()_-\|=+~!@#$%^&*`?<>[]{}".split("").forEach(function(c){
     ec = document.createElement("div")
     ec.innerHTML = `<input type="checkbox"  style="display:none"id="c${c.charCodeAt(0)}" /><label for="c${c.charCodeAt(0)}"><div style="width:20px;text-align:center;margin:2px;border:1px solid black;padding:1px">${c}</div></label>`
@@ -93,7 +98,6 @@ display_words = function(){
     rand_digit = get("digits").value
     list_digits = Array.from(document.querySelectorAll("#list_digits input:checked")).map(x => String.fromCharCode(x.getAttribute("id").substr(1)))
     list_punctu = Array.from(document.querySelectorAll("#punctuations input:checked")).map(x => String.fromCharCode(x.getAttribute("id").substr(1)))
-    rand_punctu = get("puncturange").value
 
    get("texte_to_type").innerHTML = ""
     for(i=0;i<nb_words;i++){
