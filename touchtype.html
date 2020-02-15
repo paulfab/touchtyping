@@ -24,6 +24,45 @@ background-color:red;
 }
 input[type=checkbox]:not(:checked) + label>div {background-color: grey}
 input[type=checkbox]:checked + label>div {background-color: green}
+.verticalChart {
+  width:90%;
+margin:auto;
+display:flex;
+justify-content:space-between
+}
+.verticalChart .singleBar {
+    float:left;
+width:16px
+}
+.verticalChart .singleBar .bar {
+      position:relative;
+      height:200px;
+      overflow:hidden;
+}
+.verticalChart .singleBar .bar .value {
+        position:absolute;
+        top:0;
+        width:100%;
+        background:#ffffff;
+        color:#ffffff;
+}
+.verticalChart .singleBar .bar .value span {
+          position:absolute;
+          font-size:12px;
+          bottom:0;
+          width:100%;
+          height:20px;
+          color:#dddddd;
+          text-shadow:0px -1px 0px #ffffff, 0px 1px 0px #ffffff, 1px 0px 0px #ffffff, -1px 0px 0px #ffffff, -1px -1px 0px #ffffff, -1px 1px 0px #ffffff, 1px 1px 0px #ffffff, 1px -1px 0px #ffffff;
+          display:none;
+          text-align:center;
+        }
+.verticalChart .singleBar     .title {
+      margin-top:5px;
+      text-align:center;
+      color: black;
+    }
+
 
 </style>
 <script>
@@ -34,9 +73,8 @@ function getRandomInt(min, max) {  min = Math.ceil(min);  max = Math.floor(max);
 </head>
 <body>
 <h1 >Typing text generator</h1>
-<div>
 <div style="display:flex;flex-direction:row">
-    <div>Number of words : </div><div><input type="range" min="1" max="200" value="50" class="slider" id="myRange"> </div><div><span id="nb_words_show"></span> words   </div>
+    <div>Number of words to generate : </div><div><input type="range" min="1" max="200" value="100" class="slider" id="myRange"> </div><div><span id="nb_words_show"></span> words   </div>
 
         <div style="margin-left:20px"> Upper case : </div><div><input id="upercaseinput" type="checkbox"></div>
 </div>
@@ -60,9 +98,14 @@ function getRandomInt(min, max) {  min = Math.ceil(min);  max = Math.floor(max);
 <div style="background-color:#e4e0d9; width:900px;margin:auto;word-wrap:break-word;line-height:35px;padding:15px;display:flex;flex-wrap:wrap" id="texte_to_type"></div>
 <div><button style="margin:auto;display:block;margin-top:10px" onclick='display_words()'>Refresh text</button></div>
 
+<div><button style="margin:auto;display:block;margin-top:100px" onclick='generate_char()'>Generate chart of speed per character</button></div>
+<div id="charts" class="verticalChart">
+
 </div>
 
+
 <script>
+stats_per_charac = {}
 "abcdefghijklmnopqrstuvwxyz".split("").forEach(function(c){
     ec = document.createElement("div")
     ec.innerHTML = `<input type="checkbox"  style="display:none"id="c${c.charCodeAt(0)}" checked /><label for="c${c.charCodeAt(0)}"><div style="width:20px;text-align:center;margin:2px;border:1px solid black;padding:1px">${c}</div></label>`
@@ -82,7 +125,34 @@ document.getElementById("list_digits").appendChild(ec)
 
 var slider1 = get("myRange");var output1 = get("nb_words_show");output1.innerHTML = slider1.value;slider1.oninput = function() {output1.innerHTML = this.value;display_words()} 
 var slider2 = get("digits");var output2 =get("nb_digits_show");output2.innerHTML = slider2.value;slider2.oninput = function() {output2.innerHTML = this.value;display_words()} 
+generate_char = function(){
+    get("charts").innerHTML = ""
+    maxe = 0
+    meww = {}
+    Object.keys(stats_per_charac).forEach(function(e){
+        var count=val=moy = 0
+        stats_per_charac[e].slice(-6,).forEach(function(el){ if (el<2000){val +=el; count +=1} })
+        if (count >0){moy = val / count}
+        if (moy > maxe){maxe = moy}
+        if (count >= 3){meww[e] = moy}
+    })
+    Object.keys(meww).forEach(function(e){
+        ece = document.createElement("div")
+        ece.classList.add("singleBar")
+        ece.innerHTML = `
+  <div class="singleBar">
+    <div class="bar" style="background:${meww[e] > maxe*0.7 ? "red" : "green"}">
+      <div class="value" style="height: ${meww[e]/(maxe*1.1)*100 }%;">
+      </div>
+    </div>
+    <div class="title">${e}</div>
+  </div>
 
+`
+    get("charts").appendChild(ece)
+
+    })
+}
 
 
 get("punctuations").addEventListener("click",function(){display_words()})
@@ -93,6 +163,7 @@ get("chars").addEventListener("click",function(){display_words()})
 get_current_char = function(index){return get("texte_to_type").querySelectorAll("span")[ index ? current_index + index : current_index]}
 gc = function(index){return get("texte_to_type").querySelectorAll("span")[current_index + index].innerText}
 last_three_wrong = []
+last_date = (new Date()).getTime()
 document.addEventListener("keydown",function(evt){
     typed = evt["key"]
     if (typed == " "){
@@ -109,7 +180,12 @@ document.addEventListener("keydown",function(evt){
         }
     }
     else{
-        if (typed ==get_current_char().innerText){}
+        if (typed ==get_current_char().innerText){
+            if (! (typed in stats_per_charac)){
+                stats_per_charac[typed] = []
+            }
+            stats_per_charac[typed].push((new Date()).getTime()-last_date)
+        }
         else{
             get_current_char().classList.add("wrong-key")
             last_three_wrong.push(evt["key"])
@@ -117,24 +193,20 @@ document.addEventListener("keydown",function(evt){
         get_current_char().classList.remove("blink-text")
         if (last_three_wrong.length >=3 ){
             last_three_wrong= last_three_wrong.slice(-3,)
-            console.log(last_three_wrong.join(""))
             if (current_index >=1 && last_three_wrong.join("") == (gc(-1) + gc(0) + gc(1))){
-                get_current_char().classList.remove("wrong-key")
-                get_current_char(-1).classList.remove("wrong-key")
+                get_current_char().classList.remove("wrong-key"); get_current_char(-1).classList.remove("wrong-key")
                 current_index +=1 
             last_three_wrong=[]
             }
             if (current_index >=3 && last_three_wrong.join("") == (gc(-3) + gc(-2) + gc(-1))){
-                get_current_char(0).classList.remove("wrong-key")
-                get_current_char(-1).classList.remove("wrong-key")
-                get_current_char(-3).classList.remove("wrong-key")
-                get_current_char(-2).classList.remove("wrong-key")
+                get_current_char(0).classList.remove("wrong-key"); get_current_char(-1).classList.remove("wrong-key"); get_current_char(-3).classList.remove("wrong-key"); get_current_char(-2).classList.remove("wrong-key")
                 current_index -=1
             last_three_wrong=[]
             }
 }
         current_index +=1
         get_current_char().classList.add("blink-text")
+        last_date = (new Date()).getTime()
     }
 })
 display_words = function(){
@@ -150,18 +222,10 @@ display_words = function(){
     bag_word = []
     words.forEach(function(e){
         found=false
-        e.split("").forEach(function(te){
-        if (!list_chars.includes(te)){
-            found=true
-        }
-})
-        if (found ==false){
-            bag_word.push(e)
-}
-        })
-    if (bag_word.length==0){
-bag_word.push("␣")
-}
+        e.split("").forEach(function(te){if (!list_chars.includes(te)){found=true}})
+        if (found ==false){bag_word.push(e)} //keep only words that contains characters selected
+    })
+    if (bag_word.length==0){bag_word.push("␣")} // if no ascii charact put at least space
     for(i=0;i<nb_words;i++){
         see = getRandomInt(0,100) 
         to_a = document.createElement("div")
