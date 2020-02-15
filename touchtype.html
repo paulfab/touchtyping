@@ -56,7 +56,9 @@ function getRandomInt(min, max) {  min = Math.ceil(min);  max = Math.floor(max);
 <button onclick="Array.from(this.parentElement.querySelectorAll('input')).map(x=>x.checked=true);display_words()" >select all</button><button onclick="Array.from(this.parentElement.querySelectorAll('input')).map(x=>x.checked=false);display_words()">unselect all</button>
 
 </div>
-<div style="background-color:#e4e0d9; width:900px;margin:auto;word-wrap:break-word;line-height:35px;padding:15px;margin-top:50px;display:flex;flex-wrap:wrap" id="texte_to_type"></div>
+<h2>Practice here :</h2>
+<div style="background-color:#e4e0d9; width:900px;margin:auto;word-wrap:break-word;line-height:35px;padding:15px;display:flex;flex-wrap:wrap" id="texte_to_type"></div>
+<div><button style="margin:auto;display:block;margin-top:10px" onclick='display_words()'>Refresh text</button></div>
 
 </div>
 
@@ -81,14 +83,21 @@ document.getElementById("list_digits").appendChild(ec)
 var slider1 = get("myRange");var output1 = get("nb_words_show");output1.innerHTML = slider1.value;slider1.oninput = function() {output1.innerHTML = this.value;display_words()} 
 var slider2 = get("digits");var output2 =get("nb_digits_show");output2.innerHTML = slider2.value;slider2.oninput = function() {output2.innerHTML = this.value;display_words()} 
 
+
+
 get("punctuations").addEventListener("click",function(){display_words()})
 get("list_digits").addEventListener("click",function(){display_words()})
 get("upercaseinput").addEventListener("click",function(){display_words()})
 get("chars").addEventListener("click",function(){display_words()})
 
-get_current_char = function(index){return get("texte_to_type").querySelectorAll("span")[ index ? index : current_index]}
-
+get_current_char = function(index){return get("texte_to_type").querySelectorAll("span")[ index ? current_index + index : current_index]}
+gc = function(index){return get("texte_to_type").querySelectorAll("span")[current_index + index].innerText}
+last_three_wrong = []
 document.addEventListener("keydown",function(evt){
+    typed = evt["key"]
+    if (typed == " "){
+    typed = "␣"
+}
     document.activeElement.blur()
     if ( ["Backspace","Shift","Escape","Control","Alt","ArrowUp","ArrowDown","ArrowLeft","ArrowRight", "Home","End","Insert","OS"].includes(evt["key"])){
         if (evt["key"] == "Backspace" && current_index >=1){
@@ -96,14 +105,34 @@ document.addEventListener("keydown",function(evt){
             current_index -=1
             get_current_char().classList.add("blink-text")
             get_current_char().classList.remove("wrong-key")
+            last_three_wrong=[]
         }
     }
     else{
-        if (evt["key"] ==get_current_char().innerText || (evt["key"] == " " && get_current_char().innerHTML == "␣")){}
+        if (typed ==get_current_char().innerText){}
         else{
             get_current_char().classList.add("wrong-key")
+            last_three_wrong.push(evt["key"])
         }
         get_current_char().classList.remove("blink-text")
+        if (last_three_wrong.length >=3 ){
+            last_three_wrong= last_three_wrong.slice(-3,)
+            console.log(last_three_wrong.join(""))
+            if (current_index >=1 && last_three_wrong.join("") == (gc(-1) + gc(0) + gc(1))){
+                get_current_char().classList.remove("wrong-key")
+                get_current_char(-1).classList.remove("wrong-key")
+                current_index +=1 
+            last_three_wrong=[]
+            }
+            if (current_index >=3 && last_three_wrong.join("") == (gc(-3) + gc(-2) + gc(-1))){
+                get_current_char(0).classList.remove("wrong-key")
+                get_current_char(-1).classList.remove("wrong-key")
+                get_current_char(-3).classList.remove("wrong-key")
+                get_current_char(-2).classList.remove("wrong-key")
+                current_index -=1
+            last_three_wrong=[]
+            }
+}
         current_index +=1
         get_current_char().classList.add("blink-text")
     }
